@@ -4,9 +4,9 @@ function readData(key){
             const value = data[key];
             if (value === undefined) {
                 console.log(`"${key}" key not exists`);
-                return null;
+                resolve(null);
             }
-            resolve(value)
+            resolve(value);
         })
     });
 }

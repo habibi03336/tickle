@@ -4,14 +4,35 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="popup.js" defer></script>
+    <script type="module" src="popup.js" defer></script>
+    <link href="/lib/bootstrap-5.0.2-dist//css/bootstrap.min.css" rel="stylesheet">
+    <script defer src="/lib/bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js"></script>
     <title>tickle</title>
+    <style>
+        #refRemoveButton{
+            color: red;
+            margin: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
 </head>
-<body style="width:500px; height:500px;">
-    <input id="title" type="text" style="display: block; width: 80%; margin-bottom: 3%;" placeholder="제목">
-    <textarea id="content" style="display: block; width: 80%; height:80%;" placeholder="내용"></textarea>
-    <ul id="refList"></ul>
-    <button id="refButton">ref 추가</button>
-    <button id="saveButton" style="display: block">MD저장</button>
+<body style="min-width: 500px; display: flex; flex-direction: column;">
+    <div class="container mt-2">
+        <input id="title" class="form-control" type="text" placeholder="제목">
+        <textarea id="content" class="form-control mt-2" style="min-height: 100px;" placeholder="내용">
+        </textarea>
+    </div>
+    <div class="container mt-2" style="display: flex; justify-content: center;">
+        <div id="refList" class="fw-lighter" style="font-size: small; width:90%;">
+        </div>
+        <div style="width:10%;">
+            <button id="refButton" class="btn btn-dark" style="height: 100%; width: 100%;"> + ref</button>
+        </div>
+    </div>
+    <div class="container mt-2 mb-2" style="display: flex; justify-content: space-between;">
+        <button id="resetButton" class="btn btn-light" style="width:49%; height: 100%; color:gray; border: 2px solid darkgray">reset</button>
+        <button id="saveButton" class="btn btn-light" style="width:49%; height: 100%; color:gray; border: 2px solid darkgray">save</button>
+    </div>
 </body>
 </html>

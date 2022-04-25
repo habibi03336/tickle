@@ -5,6 +5,7 @@ const $content = document.querySelector('#content');
 const $refAddbutton = document.querySelector('#refButton');
 const $refList = document.querySelector('#refList');
 const $saveButton = document.querySelector('#saveButton');
+const $resetButton = document.querySelector('#resetButton');
 
 function init(){
     setData('title', '');
@@ -17,21 +18,24 @@ async function data2UI(){
     let refs;
     [$title.value, $content.value, refs] = 
         await Promise.all([readData('title'), readData('content'), readData('refs')])
+    $content.style.height = $content.scrollHeight + 'px';
     $refList.innerHTML = '';
     Array.isArray(refs) ? refs.forEach(elem => { appendRefsLi(elem); }) : false;
 }
 
-function appendRefsLi(url){
-    const $li = document.createElement('li');
-    $li.appendChild(document.createTextNode(url));
-
-    const $removeButton = document.createElement('button');
-    $removeButton.appendChild(document.createTextNode('삭제'));
+function appendRefsLi(url_){
+    const url = new URL(url_);
+    const $li = document.createElement('div');
+    const $url = document.createElement('a');
+    $url.append(document.createTextNode(url.hostname+url.pathname));
+    $url.href = url;
+    const $removeButton = document.createElement('span');
+    $removeButton.appendChild(document.createTextNode('X'));
     $removeButton.id = 'refRemoveButton';
-    $removeButton.key = url;
+    $removeButton.key = url.href;
 
     $li.append(
-        document.createTextNode(url),
+        $url,
         $removeButton
     );
     
@@ -48,12 +52,15 @@ $title.addEventListener('input', function(e){
 
 $content.addEventListener('input', function(e){
     setData('content', $content.value);
+    if ($content.scrollHeight > Number($content.style.height.slice(0,-2))){
+        $content.style.height = $content.scrollHeight + 'px';
+    }
 });
 
 $refAddbutton.addEventListener('click', async function(e) {
     let refs, tab;
     [refs, tab] = await Promise.all([readData('refs'), getCurrentTab()]);
-    
+
     if (!refs) refs = [tab.url] 
     else refs.push(tab.url);
     
@@ -70,8 +77,10 @@ $refList.addEventListener('click', async function(e){
 });
 
 $saveButton.addEventListener('click', async function(){
+    let date = new Date();
+    date = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
     const fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${await readData('title')}.md`,
+        suggestedName: date + `-${await readData('title')}.md`,
         types: [{
           description: 'Markdown',
           accept: {
@@ -80,8 +89,23 @@ $saveButton.addEventListener('click', async function(){
         }],
       });
     const fileStream = await fileHandle.createWritable();
-    await fileStream.write(new Blob([`${await readData('content')} \n`], {type: "text/plain"}));
-    await fileStream.write(new Blob([`${await readData('refs')}`], {type: "text/plain"}));
+    let fileContent = '---\n';
+    fileContent += `title: ${await readData('title')} \n`;
+    fileContent += `date: ${date}\n`
+    fileContent += '---\n';
+    fileContent += `${await readData('content')} \n`;
+    const refs = await readData('refs');
+    if (refs) {
+        fileContent += '### Reference \n';
+        refs.forEach((ref, idx) => fileContent += `${idx+1}. ${ref} \n`);
+    }
+    await fileStream.write(new Blob([fileContent], {type: "text/plain"}));
     await fileStream.close();
     init();
+})
+
+$resetButton.addEventListener('click', function(){
+    if(window.confirm('reset all?')){
+        init();
+    }
 })
