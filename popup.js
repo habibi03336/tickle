@@ -1,4 +1,5 @@
 import { readData, setData, getCurrentTab } from './chrome.js'
+import { debounce } from './scrooge.js';
 
 const $title = document.querySelector('#title');
 const $content = document.querySelector('#content');
@@ -46,12 +47,11 @@ data2UI();
 
 ///**************** add events handlers ***************///
 
-$title.addEventListener('input', function(e){
-    setData('title', $title.value);
-});
+$title.addEventListener('input', debounce(() => setData('title', $title.value), 100));
 
-$content.addEventListener('input', function(e){
-    setData('content', $content.value);
+$content.addEventListener('input', debounce(() => setData('content', $content.value), 100));
+
+$content.addEventListener('input', () => {
     if ($content.scrollHeight > Number($content.style.height.slice(0,-2))){
         $content.style.height = $content.scrollHeight + 'px';
     }
@@ -60,7 +60,6 @@ $content.addEventListener('input', function(e){
 $refAddbutton.addEventListener('click', async function(e) {
     let refs, tab;
     [refs, tab] = await Promise.all([readData('refs'), getCurrentTab()]);
-    console.log(refs);
     if (!refs) refs = [tab.url] 
     else if (refs.findIndex((elem) => elem === tab.url) === -1) refs.push(tab.url) ;
     else return;
