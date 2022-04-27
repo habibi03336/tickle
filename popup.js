@@ -60,10 +60,11 @@ $content.addEventListener('input', function(e){
 $refAddbutton.addEventListener('click', async function(e) {
     let refs, tab;
     [refs, tab] = await Promise.all([readData('refs'), getCurrentTab()]);
-
+    console.log(refs);
     if (!refs) refs = [tab.url] 
-    else refs.push(tab.url);
-    
+    else if (refs.findIndex((elem) => elem === tab.url) === -1) refs.push(tab.url) ;
+    else return;
+
     setData('refs', refs);
     data2UI()
 });
