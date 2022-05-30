@@ -17,22 +17,14 @@
         }
     </style>
 </head>
-<body style="min-width: 500px; display: flex; flex-direction: column;">
-    <div class="container mt-2">
-        <input id="title" class="form-control" type="text" placeholder="제목">
-        <textarea id="content" class="form-control mt-2" style="min-height: 100px;" placeholder="내용">
-        </textarea>
-    </div>
+<body style="width: 550px; display: flex; flex-direction: column;">
     <div class="container mt-2" style="display: flex; justify-content: center;">
-        <div id="refList" class="fw-lighter" style="font-size: small; width:90%;">
-        </div>
-        <div style="width:10%;">
-            <button id="refButton" class="btn btn-dark" style="height: 100%; width: 100%;"> + ref</button>
+        <div id="refList" class="fw-lighter" style="font-size: small; width:100%; overflow-wrap: break-word;">
         </div>
     </div>
     <div class="container mt-2 mb-2" style="display: flex; justify-content: space-between;">
-        <button id="resetButton" class="btn btn-light" style="width:49%; height: 100%; color:gray; border: 2px solid darkgray">reset</button>
-        <button id="saveButton" class="btn btn-light" style="width:49%; height: 100%; color:gray; border: 2px solid darkgray">save</button>
+        <button id="refButton" class="btn btn-dark" style="height: 100%; width: 48%;"> + ref</button>
+        <button id="resetButton" class="btn btn-light" style="width:48%; height: 100%; color:gray; border: 2px solid darkgray">reset</button>
     </div>
 </body>
 </html>

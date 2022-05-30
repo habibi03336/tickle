@@ -1,41 +1,49 @@
 import { readData, setData, getCurrentTab } from './chrome.js'
 import { debounce } from './scrooge.js';
 
-const $title = document.querySelector('#title');
-const $content = document.querySelector('#content');
 const $refAddbutton = document.querySelector('#refButton');
 const $refList = document.querySelector('#refList');
-const $saveButton = document.querySelector('#saveButton');
 const $resetButton = document.querySelector('#resetButton');
 
 function init(){
-    setData('title', '');
-    setData('content', '');
-    setData('refs', []);
+    setData('refIdxs', []);
     data2UI();
 }
 
 async function data2UI(){
-    let refs;
-    [$title.value, $content.value, refs] = 
-        await Promise.all([readData('title'), readData('content'), readData('refs')])
-    $content.style.height = $content.scrollHeight + 'px';
+    let refIdxs = await readData('refIdxs');
     $refList.innerHTML = '';
-    Array.isArray(refs) ? refs.forEach(elem => { appendRefsLi(elem); }) : false;
+    
+    if (refIdxs.length === 0) return;
+
+    for (let idx of refIdxs)
+    {
+        let refInfo = await readData('ref' + String(idx))
+        appendRefsLi(idx, refInfo);
+    }
 }
 
-function appendRefsLi(url_){
-    const url = new URL(url_);
+function appendRefsLi(idx, data){
+    const url = new URL(data.url);
+    const $name = document.createElement('input');
+    $name.value = data.name;
+    $name.addEventListener('input', debounce(() => {
+        data.name = $name.value;
+        setData('ref'+String(idx), data);
+    }, 100));
     const $li = document.createElement('div');
+    $li.classList += 'refList';
     const $url = document.createElement('a');
     $url.append(document.createTextNode(url.hostname+url.pathname));
     $url.href = url;
+    $url.target = '_blank';
     const $removeButton = document.createElement('span');
     $removeButton.appendChild(document.createTextNode('X'));
     $removeButton.id = 'refRemoveButton';
-    $removeButton.key = url.href;
+    $removeButton.key = idx;
 
     $li.append(
+        $name,
         $url,
         $removeButton
     );
@@ -47,62 +55,27 @@ data2UI();
 
 ///**************** add events handlers ***************///
 
-$title.addEventListener('input', debounce(() => setData('title', $title.value), 100));
-
-$content.addEventListener('input', debounce(() => setData('content', $content.value), 100));
-
-$content.addEventListener('input', () => {
-    if ($content.scrollHeight > Number($content.style.height.slice(0,-2))){
-        $content.style.height = $content.scrollHeight + 'px';
-    }
-});
-
 $refAddbutton.addEventListener('click', async function(e) {
-    let refs, tab;
-    [refs, tab] = await Promise.all([readData('refs'), getCurrentTab()]);
-    if (!refs) refs = [tab.url] 
-    else if (refs.findIndex((elem) => elem === tab.url) === -1) refs.push(tab.url) ;
-    else return;
+    let refIdxs, tab;
+    [refIdxs, tab] = await Promise.all([readData('refIdxs'), getCurrentTab()]);
+    if (refIdxs.length === 0) refIdxs = [0]; 
+    else refIdxs.push(refIdxs[refIdxs.length-1] + 1);
 
-    setData('refs', refs);
+    let refName = 'ref' + String(refIdxs[refIdxs.length-1]);
+    let newData = { name: '', url: tab.url };
+
+    setData('refIdxs', refIdxs);
+    setData(refName, newData);
     data2UI()
 });
 
 $refList.addEventListener('click', async function(e){
     if (e.target.id !== 'refRemoveButton') return;
-    let refs = await readData('refs');
-    refs = refs.filter(elem => elem !== e.target.key); 
-    setData('refs', refs);
+    let refIdxs = await readData('refIdxs');
+    refIdxs = refIdxs.filter(elem => elem !== e.target.key); 
+    setData('refIdxs', refIdxs);
     data2UI();
 });
-
-$saveButton.addEventListener('click', async function(){
-    let date = new Date();
-    date = `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`;
-    const fileHandle = await window.showSaveFilePicker({
-        suggestedName: date + `-${await readData('title')}.md`,
-        types: [{
-          description: 'Markdown',
-          accept: {
-            'text/markdown': ['.md'],
-          },
-        }],
-      });
-    const fileStream = await fileHandle.createWritable();
-    let fileContent = '---\n';
-    fileContent += `title: ${await readData('title')} \n`;
-    fileContent += `date: ${date}\n`
-    fileContent += '---\n';
-    fileContent += `${await readData('content')} \n`;
-    const refs = await readData('refs');
-    if (refs) {
-        fileContent += '### Reference \n';
-        refs.forEach((ref, idx) => fileContent += `${idx+1}. ${ref} \n`);
-    }
-    await fileStream.write(new Blob([fileContent], {type: "text/plain"}));
-    await fileStream.close();
-    init();
-})
 
 $resetButton.addEventListener('click', function(){
     if(window.confirm('reset all?')){
